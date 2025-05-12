@@ -163,7 +163,7 @@
 
 .incident-list-grid {
     display: grid;
-    grid-template-columns: 1.65fr 2fr 3fr 1.5fr 2fr 1.5fr;
+    grid-template-columns: 20% 15% 25% 15% 10% 15%;
     /* Increased ID title width */
     gap: 1rem;
     padding-top: 0.5rem;
@@ -177,7 +177,7 @@
 
 .incident-item {
     display: grid;
-    grid-template-columns: 0.2fr 2fr 3fr 1.5fr 2fr 1.5fr;
+    grid-template-columns: 20% 15% 25% 15% 10% 15%;
     /* Decreased ID data width */
     gap: 1rem;
     padding-top: 0.75rem;

@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Incident } from '../../entites/incidentsEntities';
 import './IncidentList.css';
-import { app } from "../../services/FirebaseStorage"; // Make sure this is the correct path
-import { getDatabase, ref, get, update, push } from "firebase/database";
-import { User } from '../../entites/incidentsEntities'; // Ensure correct import
+import { app } from "../../services/FirebaseStorage";
+import { getDatabase, ref, get, update, orderByChild, query, push } from "firebase/database";
+import { User } from '../../entites/incidentsEntities';
 
 interface IncidentItemProps {
     incident: Incident;
-    onIncidentUpdated: () => void; // Callback to trigger list refresh
+    onIncidentUpdated: () => void;
 }
 
 const IncidentItem: React.FC<IncidentItemProps> = ({ incident, onIncidentUpdated }) => {
@@ -17,10 +17,9 @@ const IncidentItem: React.FC<IncidentItemProps> = ({ incident, onIncidentUpdated
 
         try {
             await update(incidentRef, { status: false });
-            onIncidentUpdated(); // Call the callback to refresh the list
+            onIncidentUpdated();
         } catch (error) {
             console.error('Error closing incident:', error);
-            // Optionally display an error message to the user
         }
     };
 
@@ -113,7 +112,7 @@ const IncidentList: React.FC = () => {
     };
 
     const handleIncidentUpdated = () => {
-        setRefreshIncidents(prev => !prev); // Trigger refresh after closing
+        setRefreshIncidents(prev => !prev);
     };
 
     useEffect(() => {
@@ -121,15 +120,22 @@ const IncidentList: React.FC = () => {
             setLoadingIncidents(true);
             const database = getDatabase(app);
             const incidentsRef = ref(database, 'incidents');
+            const incidentsQuery = query(incidentsRef, orderByChild('fecha'));
 
             try {
-                const snapshot = await get(incidentsRef);
+                const snapshot = await get(incidentsQuery);
                 if (snapshot.exists()) {
                     const incidentsData = snapshot.val();
-                    const incidentsArray: Incident[] = Object.keys(incidentsData).map(key => ({
-                        id: key,
-                        ...incidentsData[key],
-                    }));
+                    const incidentsArray: Incident[] = Object.keys(incidentsData)
+                        .map(key => ({
+                            id: key,
+                            ...incidentsData[key],
+                        }))
+                        .sort((a, b) => {
+                            const dateA = parseDateString(a.fecha);
+                            const dateB = parseDateString(b.fecha);
+                            return dateB.getTime() - dateA.getTime(); // Newest first
+                        });
                     setIncidents(incidentsArray);
                 } else {
                     setIncidents([]);
@@ -141,6 +147,25 @@ const IncidentList: React.FC = () => {
             } finally {
                 setLoadingIncidents(false);
             }
+        };
+
+        // Helper function to parse your date string format
+        const parseDateString = (dateString: string | undefined): Date => {
+            if (!dateString) {
+                return new Date(0); // Or handle the undefined case as you see fit
+            }
+            const parts = dateString.split(', ');
+            const dateParts = parts[0].split('/');
+            const timeParts = parts[1].split(':');
+            // Month is 0-indexed in JavaScript Date, so subtract 1
+            return new Date(
+                parseInt(dateParts[2], 10),
+                parseInt(dateParts[1], 10) - 1,
+                parseInt(dateParts[0], 10),
+                parseInt(timeParts[0], 10),
+                parseInt(timeParts[1], 10),
+                parseInt(timeParts[2], 10)
+            );
         };
 
         fetchIncidents();
@@ -229,7 +254,7 @@ const IncidentList: React.FC = () => {
                 <IncidentItem
                     key={incident.id}
                     incident={incident}
-                    onIncidentUpdated={handleIncidentUpdated} // Pass the callback
+                    onIncidentUpdated={handleIncidentUpdated}
                 />
             ))}
 

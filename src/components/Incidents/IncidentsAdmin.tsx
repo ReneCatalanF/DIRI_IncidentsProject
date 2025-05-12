@@ -1,38 +1,60 @@
 import React, { useState, useEffect } from 'react';
 import { Incident } from '../../entites/incidentsEntities';
 import './IncidentList.css';
-import { app } from "../../services/FirebaseStorage"; // Assuming you have your Firebase config here
-import { getDatabase, ref, get } from "firebase/database";
-import { User } from '../../entites/incidentsEntities';
+import { app } from "../../services/FirebaseStorage"; // Make sure this is the correct path
+import { getDatabase, ref, get, update, push } from "firebase/database";
+import { User } from '../../entites/incidentsEntities'; // Ensure correct import
 
 interface IncidentItemProps {
     incident: Incident;
+    onIncidentUpdated: () => void; // Callback to trigger list refresh
 }
 
-const IncidentItem: React.FC<IncidentItemProps> = ({ incident }) => (
-    <div className="incident-item">
-        <div className="incident-id">INC{incident.id}</div>
-        <div className="incident-title">{incident.title}</div>
-        <div className="incident-path">{incident.path}</div>
-        <div className="incident-assigned">{incident.assignedUser}</div>
-        <div className="incident-date">{incident.fecha}</div>
-        <div className="incident-action">
-            {incident.status ? (
-                <button className="close-incident-button">Cerrar incidente</button>
-            ) : (
-                <span className="incident-closed">Incidente cerrado</span>
-            )}
+const IncidentItem: React.FC<IncidentItemProps> = ({ incident, onIncidentUpdated }) => {
+    const handleCloseIncident = async () => {
+        const database = getDatabase(app);
+        const incidentRef = ref(database, `incidents/${incident.id}`);
+
+        try {
+            await update(incidentRef, { status: false });
+            onIncidentUpdated(); // Call the callback to refresh the list
+        } catch (error) {
+            console.error('Error closing incident:', error);
+            // Optionally display an error message to the user
+        }
+    };
+
+    return (
+        <div className="incident-item">
+            <div className="incident-id">INC{incident.id}</div>
+            <div className="incident-title">{incident.title}</div>
+            <div className="incident-path">{incident.path}</div>
+            <div className="incident-assigned">{incident.assignedUser}</div>
+            <div className="incident-date">{incident.fecha}</div>
+            <div className="incident-action">
+                {incident.status ? (
+                    <button className="close-incident-button" onClick={handleCloseIncident}>
+                        Cerrar incidente
+                    </button>
+                ) : (
+                    <span className="incident-closed">Incidente cerrado</span>
+                )}
+            </div>
         </div>
-    </div>
-);
+    );
+};
 
 const IncidentList: React.FC = () => {
-    const [incidents, setIncidents] = useState<Incident[]>(initialIncidents);
+    const [incidents, setIncidents] = useState<Incident[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [newIncidentTitle, setNewIncidentTitle] = useState('');
     const [newIncidentPath, setNewIncidentPath] = useState('');
-    const [assignedUser, setAssignedUser] = useState('');
+    const [assignedUserEmail, setAssignedUserEmail] = useState('');
     const [availableUsers, setAvailableUsers] = useState<User[]>([]);
+    const [loadingIncidents, setLoadingIncidents] = useState(true);
+    const [loadingUsers, setLoadingUsers] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [refreshIncidents, setRefreshIncidents] = useState(false);
 
     const openModal = () => {
         setIsModalOpen(true);
@@ -42,7 +64,7 @@ const IncidentList: React.FC = () => {
         setIsModalOpen(false);
         setNewIncidentTitle('');
         setNewIncidentPath('');
-        setAssignedUser('');
+        setAssignedUserEmail('');
     };
 
     const handleInputChange = (
@@ -57,7 +79,7 @@ const IncidentList: React.FC = () => {
                 setNewIncidentPath(value);
                 break;
             case 'assignedUser':
-                setAssignedUser(value);
+                setAssignedUserEmail(value);
                 break;
             default:
                 break;
@@ -65,27 +87,68 @@ const IncidentList: React.FC = () => {
     };
 
     const handleAddIncident = async () => {
-        if (newIncidentTitle && newIncidentPath && assignedUser) {
-            const newIncident: Incident = {
-                id: incidents.length + 1,
+        if (newIncidentTitle && newIncidentPath && assignedUserEmail) {
+            const database = getDatabase(app);
+            const incidentsRef = ref(database, 'incidents');
+
+            const newIncidentData: Omit<Incident, 'id'> = {
                 fecha: new Date().toLocaleString('es-ES'),
-                assignedUser: assignedUser,
+                assignedUser: assignedUserEmail,
                 title: newIncidentTitle,
                 path: newIncidentPath,
                 status: true,
             };
-            setIncidents([...incidents, newIncident]);
-            closeModal();
 
-            
-            console.log('Nuevo Incidente agregado:', newIncident);
+            try {
+                await push(incidentsRef, newIncidentData);
+                closeModal();
+                setRefreshIncidents(prev => !prev);
+            } catch (error) {
+                console.error('Error adding incident:', error);
+                setError('Error al agregar el incidente.');
+            }
         } else {
             alert('Por favor, completa todos los campos.');
         }
     };
 
+    const handleIncidentUpdated = () => {
+        setRefreshIncidents(prev => !prev); // Trigger refresh after closing
+    };
+
+    useEffect(() => {
+        const fetchIncidents = async () => {
+            setLoadingIncidents(true);
+            const database = getDatabase(app);
+            const incidentsRef = ref(database, 'incidents');
+
+            try {
+                const snapshot = await get(incidentsRef);
+                if (snapshot.exists()) {
+                    const incidentsData = snapshot.val();
+                    const incidentsArray: Incident[] = Object.keys(incidentsData).map(key => ({
+                        id: key,
+                        ...incidentsData[key],
+                    }));
+                    setIncidents(incidentsArray);
+                } else {
+                    setIncidents([]);
+                    console.log('No incidents data available');
+                }
+            } catch (error) {
+                console.error('Error fetching incidents:', error);
+                setError('Error al cargar los incidentes.');
+            } finally {
+                setLoadingIncidents(false);
+            }
+        };
+
+        fetchIncidents();
+    }, [refreshIncidents]);
+
     useEffect(() => {
         const fetchNonAdminUsers = async () => {
+            setLoadingUsers(true);
             const database = getDatabase(app);
             const usersRef = ref(database, 'users');
 
@@ -101,17 +164,27 @@ const IncidentList: React.FC = () => {
                     }
                     setAvailableUsers(usersArray);
                 } else {
-                    console.log('No users data available');
                     setAvailableUsers([]);
+                    console.log('No users data available');
                 }
             } catch (error) {
                 console.error('Error fetching users:', error);
-                setAvailableUsers([]);
+                setError('Error al cargar los usuarios.');
+            } finally {
+                setLoadingUsers(false);
             }
         };
 
         fetchNonAdminUsers();
     }, []);
+
+    if (loadingIncidents || loadingUsers) {
+        return <div>Cargando...</div>;
+    }
+
+    if (error) {
+        return <div>Error: {error}</div>;
+    }
 
     return (
         <div className="incident-list-container">
@@ -153,15 +226,27 @@ const IncidentList: React.FC = () => {
             </div>
 
             {incidents.map((incident) => (
-                <IncidentItem key={incident.id} incident={incident} />
+                <IncidentItem
+                    key={incident.id}
+                    incident={incident}
+                    onIncidentUpdated={handleIncidentUpdated} // Pass the callback
+                />
             ))}
 
             {isModalOpen && (
                 <div className="modal-overlay">
                     <div className="modal">
-                        <h2>Agregar Nuevo Incidente</h2>
+                        <div className="modal-header">
+                            <h2>Creando Incidente</h2>
+                            <button onClick={closeModal}>
+                                <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                            </button>
+                        </div>
                         <div className="modal-content">
-                            <label htmlFor="title">Título:</label>
+                            <label htmlFor="title">Título</label>
                             <input
                                 type="text"
                                 id="title"
@@ -170,7 +255,7 @@ const IncidentList: React.FC = () => {
                                 onChange={handleInputChange}
                             />
 
-                            <label htmlFor="path">Ubicación:</label>
+                            <label htmlFor="path">Ubicación</label>
                             <input
                                 type="text"
                                 id="path"
@@ -179,11 +264,11 @@ const IncidentList: React.FC = () => {
                                 onChange={handleInputChange}
                             />
 
-                            <label htmlFor="assignedUser">Asignar a:</label>
+                            <label htmlFor="assignedUser">Personal Asignado</label>
                             <select
                                 id="assignedUser"
                                 name="assignedUser"
-                                value={assignedUser}
+                                value={assignedUserEmail}
                                 onChange={handleInputChange}
                             >
                                 <option value="">Seleccionar usuario</option>
@@ -194,12 +279,11 @@ const IncidentList: React.FC = () => {
                                 ))}
                             </select>
 
-                            <button onClick={handleAddIncident} className="confirm-button">
-                                Guardar Incidente
-                            </button>
-                            <button onClick={closeModal} className="cancel-button">
-                                Cancelar
-                            </button>
+                            <div className="modal-footer">
+                                <button onClick={handleAddIncident} className="confirm-button">
+                                    Agregar Incidente
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -207,33 +291,5 @@ const IncidentList: React.FC = () => {
         </div>
     );
 };
-
-// Mock initial incidents (you can remove this if you fetch from elsewhere)
-const initialIncidents: Incident[] = [
-    {
-        id: 1,
-        fecha: '03-03-2025 17:10',
-        assignedUser: 'rene@rene.es',
-        title: 'Charco de líquido',
-        path: 'Piso 2 en pasillo 3 camino a los baños, entre tienda 1 y tienda 2',
-        status: true,
-    },
-    {
-        id: 2,
-        fecha: '03-03-2025 10:27',
-        assignedUser: 'renecatalanf@gmail.com',
-        title: 'Bombilla quemada',
-        path: 'Piso 1 pasillo 9, sección de vinos',
-        status: true,
-    },
-    {
-        id: 3,
-        fecha: '03-03-2025 10:27',
-        assignedUser: 'ricf1 @mscloud.ua.es',
-        title: 'Cajas en el suelo',
-        path: 'Piso 1 pasillo 9, sección de vinos',
-        status: false,
-    },
-];
 
 export default IncidentList;

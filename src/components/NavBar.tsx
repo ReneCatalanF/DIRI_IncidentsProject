@@ -4,6 +4,7 @@ import { AuthContext } from '../contexts/AuthContext';
 import { authService } from '../services/AuthServide';
 import '../App.css';
 import { Role } from '../services/IAuthService';
+//import { Incident } from '../entites/incidentsEntities';
 
 /*
 renecatalanf@gmail.com
@@ -27,13 +28,12 @@ export const Navbar: React.FC = () => {
     return (
         <nav className="navbar">
             <ul className="nav-menu">
-                
-                {user &&
-                    <li><Link to="/dashboard">Dashboard</Link></li>}
-
+                {user && roles && roles.includes(Role.USER) && (
+                    <li><Link to="/">My Incidents</Link></li>
+                )}
 
                 {user && roles && roles.includes(Role.ADMIN) && (
-                    <li><Link to="/admin">Admin</Link></li>
+                    <li><Link to="/dashboard">Incidents</Link></li>
                 )}
                 {!user && <li><Link to="/login">Login</Link></li>}
                 {!user && <li><Link to="/register">Registro</Link></li>}

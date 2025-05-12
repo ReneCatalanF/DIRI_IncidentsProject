@@ -15,7 +15,7 @@ export const Login: React.FC = () => {
             const userCredential
                 = await authService.signIn(email, password);
             console.log("Usuario autenticado:", userCredential.user);
-            navigate('/dashboard');
+            navigate('/');
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
             console.error("Error al iniciar sesión:", error);

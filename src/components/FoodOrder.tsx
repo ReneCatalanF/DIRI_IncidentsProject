@@ -111,17 +111,17 @@ function FoodOrder(props: FoodOrderProps) {
 
     useEffect(() => {
         if (isOrder === false && timeData) {
-          async function realizarPedido() {
-            try {
-              await crearPedido();
-              setExcede(false);
-            } catch (error) {
-              console.error('Error al crear pedido:', error);
+            async function realizarPedido() {
+                try {
+                    await crearPedido();
+                    setExcede(false);
+                } catch (error) {
+                    console.error('Error al crear pedido:', error);
+                }
             }
-          }
-          realizarPedido();
+            realizarPedido();
         }
-      }, [crearPedido, isOrder, timeData]);
+    }, [crearPedido, isOrder, timeData]);
 
     return (
         <>

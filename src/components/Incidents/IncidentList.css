@@ -1,0 +1,224 @@
+/* Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.3);
+    /* Slightly less transparent */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal {
+    background-color: #f8f8f8;
+    /* Light gray background */
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    padding: 20px;
+    width: 90%;
+    max-width: 400px;
+    /* Adjust max width */
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.modal-header h2 {
+    margin: 0;
+    color: #333;
+    font-size: 1.5rem;
+}
+
+.modal-header button {
+    background: none;
+    border: none;
+    color: #777;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+}
+
+.modal-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-content label {
+    margin-bottom: 5px;
+    color: #555;
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+.modal-content input[type='text'],
+.modal-content select {
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+.modal-content select {
+    appearance: none;
+    /* Remove default arrow */
+    background-image: url('data:image/svg+xml;utf8,<svg fill="currentColor" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>');
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 1em;
+}
+
+.modal-footer {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+}
+
+.modal-footer button {
+    background-color: #f0506e;
+    /* Reddish color */
+    color: #fff;
+    font-weight: bold;
+    padding: 10px 20px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.modal-footer button:hover {
+    background-color: #e03858;
+}
+
+/* Adjustments for the main list to accommodate the modal */
+.incident-list-container {
+    position: relative;
+    /* To allow modal overlay to cover it */
+    background-color: #fff;
+    border-radius: 0.375rem;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+    padding: 1rem;
+}
+
+.incident-list-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.search-input-wrapper {
+    position: relative;
+    flex-grow: 1;
+    margin-right: 1rem;
+}
+
+.search-icon {
+    width: 1rem;
+    height: 1rem;
+    color: #6b7280;
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+.search-input {
+    background-color: #f9fafb;
+    border: 1px solid #d1d5db;
+    color: #374151;
+    font-size: 0.875rem;
+    border-radius: 0.375rem;
+    padding-left: 2.5rem;
+    padding-top: 0.625rem;
+    padding-bottom: 0.625rem;
+    width: 95%;
+    outline: none;
+}
+
+.add-incident-button {
+    background-color: #f0506e;
+    /* Matching modal button */
+    color: #fff;
+    font-weight: bold;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.add-incident-button:hover {
+    background-color: #e03858;
+}
+
+.incident-list-grid {
+    display: grid;
+    grid-template-columns: 1fr 2fr 3fr 1.5fr 2fr 1.5fr;
+    gap: 1rem;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+}
+
+.header-row {
+    font-weight: bold;
+    color: #374151;
+}
+
+.incident-item {
+    display: grid;
+    grid-template-columns: 1fr 2fr 3fr 1.5fr 2fr 1.5fr;
+    gap: 1rem;
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #e5e7eb;
+    align-items: center;
+}
+
+.incident-item:last-child {
+    border-bottom: none;
+}
+
+.incident-id {
+    color: #dc2626;
+    font-weight: bold;
+}
+
+.incident-path {
+    font-size: 0.875rem;
+    color: #4b5563;
+}
+
+.incident-assigned {
+    font-size: 0.875rem;
+    color: #374151;
+}
+
+.incident-date {
+    font-size: 0.875rem;
+    color: #374151;
+}
+
+.close-incident-button {
+    background-color: #e5e7eb;
+    color: #4b5563;
+    border-radius: 0.375rem;
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+    border: none;
+    cursor: pointer;
+}
+
+.incident-closed {
+    color: #6b7280;
+    font-size: 0.875rem;
+}

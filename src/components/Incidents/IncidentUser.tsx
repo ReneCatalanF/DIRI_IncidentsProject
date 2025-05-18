@@ -62,6 +62,7 @@ const IncidentListUser: React.FC = () => {
     const [refreshIncidents, setRefreshIncidents] = useState(false);
     const { user } = useContext(AuthContext);
 
+    const [searchTerm, setSearchTerm] = useState('');
     //const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     //const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
 
@@ -205,7 +206,9 @@ const IncidentListUser: React.FC = () => {
                     <input
                         type="text"
                         className="search-input"
-                        placeholder="Hinted search text"
+                        placeholder="Buscar por título o ubicación"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
             </div>
@@ -219,7 +222,12 @@ const IncidentListUser: React.FC = () => {
                 <div className="grid-item">Acción</div>
             </div>
 
-            {incidents.map((incident) => (
+            {incidents
+            .filter(incident =>
+                    incident.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    incident.path.toLowerCase().includes(searchTerm.toLowerCase())
+                )
+            .map((incident) => (
                 <IncidentItem
                     key={incident.id}
                     incident={incident}

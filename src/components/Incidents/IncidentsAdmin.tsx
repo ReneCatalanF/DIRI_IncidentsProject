@@ -30,30 +30,30 @@ const IncidentItem: React.FC<IncidentItemProps> = ({ incident, onIncidentUpdated
 
     return (
         <>
-        <div className="incident-item">
-            {incident.status ? (
-                <div className="incident-id">INC{incident.id}</div>
-            ) : (
-                <div className="incident-id-close">INC{incident.id}</div>
-            )}
-
-            <div className="incident-title" onClick={() => onIncidentClick(incident)} style={{ cursor: 'pointer' }}>{incident.title}</div>
-            <div className="incident-path" onClick={() => onIncidentClick(incident)} style={{ cursor: 'pointer' }}>{incident.path}</div>
-            <div className="incident-assigned" onClick={() => onIncidentClick(incident)} style={{ cursor: 'pointer' }}>{incident.assignedUser}</div>
-            <div className="incident-date" onClick={() => onIncidentClick(incident)} style={{ cursor: 'pointer' }}>{incident.fecha}</div>
-            <div className="incident-action">
+            <div className="incident-item">
                 {incident.status ? (
-                    <button className="close-incident-button" onClick={handleCloseIncident}>
-                        Cerrar incidente
-                    </button>
+                    <div className="incident-id">INC{incident.id}</div>
                 ) : (
-                    <span className="incident-closed">Incidente cerrado</span>
+                    <div className="incident-id-close">INC{incident.id}</div>
                 )}
+
+                <div className="incident-title" onClick={() => onIncidentClick(incident)} style={{ cursor: 'pointer' }}>{incident.title}</div>
+                <div className="incident-path" onClick={() => onIncidentClick(incident)} style={{ cursor: 'pointer' }}>{incident.path}</div>
+                <div className="incident-assigned" onClick={() => onIncidentClick(incident)} style={{ cursor: 'pointer' }}>{incident.assignedUser}</div>
+                <div className="incident-date" onClick={() => onIncidentClick(incident)} style={{ cursor: 'pointer' }}>{incident.fecha}</div>
+                <div className="incident-action">
+                    {incident.status ? (
+                        <button className="close-incident-button" onClick={handleCloseIncident}>
+                            Cerrar incidente
+                        </button>
+                    ) : (
+                        <span className="incident-closed">Incidente cerrado</span>
+                    )}
+                </div>
             </div>
-        </div>
-        
+
         </>
-        
+
     );
 };
 
@@ -71,6 +71,9 @@ const IncidentList: React.FC = () => {
 
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
+
+    //Para filtrar por titulo o ubicacion los incidentes
+    const [searchTerm, setSearchTerm] = useState('');
 
     const openModal = () => {
         logger.info('Open create Modal');
@@ -121,7 +124,7 @@ const IncidentList: React.FC = () => {
             const database = getDatabase(app);
             const incidentsRef = ref(database, 'incidents');
 
-            
+
             const newIncidentData: Omit<Incident, 'id'> = {
                 fecha: new Date().toLocaleString('es-ES'),
                 assignedUser: assignedUserEmail,
@@ -165,7 +168,7 @@ const IncidentList: React.FC = () => {
                 };
 
                 await update(incidentRef, updateData);
-                logger.info('Update Incident '+updateData.title);
+                logger.info('Update Incident ' + updateData.title);
                 closeEditModal();
 
                 //refrescamos la lista de incidentes para ver los cambios realizados
@@ -216,7 +219,7 @@ const IncidentList: React.FC = () => {
             }
         };
 
-        
+
         const parseDateString = (dateString: string | undefined): Date => {
             if (!dateString) {
                 return new Date(0);
@@ -224,7 +227,7 @@ const IncidentList: React.FC = () => {
             const parts = dateString.split(', ');
             const dateParts = parts[0].split('/');
             const timeParts = parts[1].split(':');
-            
+
             return new Date(
                 parseInt(dateParts[2], 10),
                 parseInt(dateParts[1], 10) - 1,
@@ -303,7 +306,9 @@ const IncidentList: React.FC = () => {
                     <input
                         type="text"
                         className="search-input"
-                        placeholder="Hinted search text"
+                        placeholder="Buscar por título o ubicación"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
                 <button onClick={openModal} className="add-incident-button">
@@ -320,14 +325,19 @@ const IncidentList: React.FC = () => {
                 <div className="grid-item">Acción</div>
             </div>
 
-            {incidents.map((incident) => (
-                <IncidentItem
-                    key={incident.id}
-                    incident={incident}
-                    onIncidentUpdated={handleIncidentUpdated}
-                    onIncidentClick={openEditModal}
-                />
-            ))}
+            {incidents
+                .filter(incident =>
+                    incident.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    incident.path.toLowerCase().includes(searchTerm.toLowerCase())
+                )
+                .map((incident) => (
+                    <IncidentItem
+                        key={incident.id}
+                        incident={incident}
+                        onIncidentUpdated={handleIncidentUpdated}
+                        onIncidentClick={openEditModal}
+                    />
+                ))}
 
             {isModalOpen && (
                 <div className="modal-overlay">
@@ -434,7 +444,7 @@ const IncidentList: React.FC = () => {
                                 <button className="confirm-button" onClick={handleUpdateIncident}> {/* Llamar a la función de actualización */}
                                     Guardar
                                 </button>
-                                
+
                             </div>
                         </div>
                     </div>

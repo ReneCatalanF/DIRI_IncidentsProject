@@ -20,6 +20,7 @@ const IncidentItem: React.FC<IncidentItemProps> = ({ incident, onIncidentUpdated
 
         try {
             await update(incidentRef, { status: false });
+            logger.info('Incident new status Closed');
             onIncidentUpdated();
         } catch (error) {
             logger.error('Error closing incident:' + error);
@@ -28,17 +29,18 @@ const IncidentItem: React.FC<IncidentItemProps> = ({ incident, onIncidentUpdated
     };
 
     return (
-        <div className="incident-item" onClick={() => onIncidentClick(incident)} style={{ cursor: 'pointer' }}>
+        <>
+        <div className="incident-item">
             {incident.status ? (
                 <div className="incident-id">INC{incident.id}</div>
             ) : (
                 <div className="incident-id-close">INC{incident.id}</div>
             )}
 
-            <div className="incident-title">{incident.title}</div>
-            <div className="incident-path">{incident.path}</div>
-            <div className="incident-assigned">{incident.assignedUser}</div>
-            <div className="incident-date">{incident.fecha}</div>
+            <div className="incident-title" onClick={() => onIncidentClick(incident)} style={{ cursor: 'pointer' }}>{incident.title}</div>
+            <div className="incident-path" onClick={() => onIncidentClick(incident)} style={{ cursor: 'pointer' }}>{incident.path}</div>
+            <div className="incident-assigned" onClick={() => onIncidentClick(incident)} style={{ cursor: 'pointer' }}>{incident.assignedUser}</div>
+            <div className="incident-date" onClick={() => onIncidentClick(incident)} style={{ cursor: 'pointer' }}>{incident.fecha}</div>
             <div className="incident-action">
                 {incident.status ? (
                     <button className="close-incident-button" onClick={handleCloseIncident}>
@@ -49,6 +51,9 @@ const IncidentItem: React.FC<IncidentItemProps> = ({ incident, onIncidentUpdated
                 )}
             </div>
         </div>
+        
+        </>
+        
     );
 };
 
@@ -68,10 +73,12 @@ const IncidentList: React.FC = () => {
     const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
 
     const openModal = () => {
+        logger.info('Open create Modal');
         setIsModalOpen(true);
     };
 
     const closeModal = () => {
+        logger.info('Close create Modal');
         setIsModalOpen(false);
         setNewIncidentTitle('');
         setNewIncidentPath('');
@@ -79,11 +86,13 @@ const IncidentList: React.FC = () => {
     };
 
     const openEditModal = (incident: Incident) => {
+        logger.info('Open edit Modal');
         setSelectedIncident(incident);
         setIsEditModalOpen(true);
     };
 
     const closeEditModal = () => {
+        logger.info('Close edit Modal');
         setIsEditModalOpen(false);
         setSelectedIncident(null);
     };
@@ -112,6 +121,7 @@ const IncidentList: React.FC = () => {
             const database = getDatabase(app);
             const incidentsRef = ref(database, 'incidents');
 
+            
             const newIncidentData: Omit<Incident, 'id'> = {
                 fecha: new Date().toLocaleString('es-ES'),
                 assignedUser: assignedUserEmail,
@@ -122,6 +132,7 @@ const IncidentList: React.FC = () => {
 
             try {
                 await push(incidentsRef, newIncidentData);
+                logger.info('Adding new Incident');
                 closeModal();
                 setRefreshIncidents(prev => !prev);
             } catch (error) {
@@ -130,11 +141,13 @@ const IncidentList: React.FC = () => {
                 setError('Error al agregar el incidente.');
             }
         } else {
+            logger.info('Missing param');
             alert('Por favor, completa todos los campos.');
         }
     };
 
     const handleIncidentUpdated = () => {
+        logger.info('Refresh list');
         setRefreshIncidents(prev => !prev);
     };
 
@@ -152,6 +165,7 @@ const IncidentList: React.FC = () => {
                 };
 
                 await update(incidentRef, updateData);
+                logger.info('Update Incident '+updateData.title);
                 closeEditModal();
 
                 //refrescamos la lista de incidentes para ver los cambios realizados
@@ -186,6 +200,7 @@ const IncidentList: React.FC = () => {
                             const dateB = parseDateString(b.fecha);
                             return dateB.getTime() - dateA.getTime(); // Newest first
                         });
+                    logger.info('Get Incidents: ' + incidentsArray);
                     setIncidents(incidentsArray);
                 } else {
                     setIncidents([]);
@@ -201,15 +216,15 @@ const IncidentList: React.FC = () => {
             }
         };
 
-        // Helper function to parse your date string format
+        
         const parseDateString = (dateString: string | undefined): Date => {
             if (!dateString) {
-                return new Date(0); // Or handle the undefined case as you see fit
+                return new Date(0);
             }
             const parts = dateString.split(', ');
             const dateParts = parts[0].split('/');
             const timeParts = parts[1].split(':');
-            // Month is 0-indexed in JavaScript Date, so subtract 1
+            
             return new Date(
                 parseInt(dateParts[2], 10),
                 parseInt(dateParts[1], 10) - 1,
@@ -239,6 +254,7 @@ const IncidentList: React.FC = () => {
                             usersArray.push({ uid, ...usersData[uid] });
                         }
                     }
+                    logger.info('Get Users: ' + usersArray);
                     setAvailableUsers(usersArray);
                 } else {
                     setAvailableUsers([]);

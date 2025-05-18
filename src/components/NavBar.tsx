@@ -34,7 +34,13 @@ export const Navbar: React.FC = () => {
 
                 {user && roles && roles.includes(Role.ADMIN) && (
                     <li><Link to="/dashboard">Incidents</Link></li>
+                    
                 )}
+                {user && roles && roles.includes(Role.ADMIN) && (
+                    <li><Link to="/admin">UserRoles</Link></li>
+                    
+                )}
+                
                 {!user && <li><Link to="/login">Login</Link></li>}
                 {!user && <li><Link to="/register">Registro</Link></li>}
                 {user && <li><button onClick={handleLogout}>Logout</button></li>}

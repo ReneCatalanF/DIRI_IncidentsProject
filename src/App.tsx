@@ -9,13 +9,14 @@ import { AuthProvider } from './contexts/AuthContext';
 import AdminRoute from './routes/AdminRoute';
 import { ProtectedRoute } from './routes/ProtectedRoute';
 //import Foods from './components/Foods';
-import Menus from './components/Menu';
+//import Menus from './components/Menu';
 import { Login } from './components/Login';
 import Register from './components/Register';
 import WelcomeComp from './components/Welcome';
 //import Foods from './components/Foods';
 import IncidentList from './components/Incidents/IncidentsAdmin';
 import IncidentListUser from './components/Incidents/IncidentUser';
+import RolesAdmin from './components/Incidents/RoleUserList';
 //import Menus from './components/Menu';
 //import { Link } from 'react-router-dom';
 
@@ -69,7 +70,7 @@ const App: React.FC = () => {
               <Route path="/register" element={<Register />} />
               <Route path="/dashboard" element={<AdminRoute><IncidentList /></AdminRoute>} />
               <Route path="/dashboard2" element={<ProtectedRoute><IncidentListUser /></ProtectedRoute>} />
-              <Route path="/admin" element={<AdminRoute><Menus /></AdminRoute>} />
+              <Route path="/admin" element={<AdminRoute><RolesAdmin /></AdminRoute>} />
               <Route path="*" element={<WelcomeComp />} />
             </Routes>
           </div>

@@ -1,0 +1,55 @@
+.roles-admin-container {
+    padding: 20px;
+}
+
+.roles-admin-container h2 {
+    margin-bottom: 20px;
+}
+
+.user-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.user-card {
+    border: 1px solid #ccc;
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.user-card h3 {
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+
+.role-toggle {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.role-button {
+    padding: 8px 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    cursor: pointer;
+    background-color: white;
+    color: #333;
+    transition: background-color 0.3s ease;
+}
+
+.role-button.active {
+    background-color: #28a745;
+    color: white;
+    border-color: #28a745;
+}
+
+.role-button:hover {
+    background-color: #f0f0f0;
+}
+
+.role-button.active:hover {
+    background-color: #218838;
+}

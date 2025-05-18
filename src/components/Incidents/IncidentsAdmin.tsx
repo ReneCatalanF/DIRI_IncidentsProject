@@ -5,6 +5,8 @@ import { app } from "../../services/FirebaseStorage";
 import { getDatabase, ref, get, update, orderByChild, query, push } from "firebase/database";
 import { User } from '../../entites/incidentsEntities';
 
+import logger from "../../services/logging";
+
 interface IncidentItemProps {
     incident: Incident;
     onIncidentUpdated: () => void;
@@ -20,7 +22,8 @@ const IncidentItem: React.FC<IncidentItemProps> = ({ incident, onIncidentUpdated
             await update(incidentRef, { status: false });
             onIncidentUpdated();
         } catch (error) {
-            console.error('Error closing incident:', error);
+            logger.error('Error closing incident:' + error);
+            //console.error('Error closing incident:', error);
         }
     };
 
@@ -122,7 +125,8 @@ const IncidentList: React.FC = () => {
                 closeModal();
                 setRefreshIncidents(prev => !prev);
             } catch (error) {
-                console.error('Error adding incident:', error);
+                logger.error('Error adding incident:' + error);
+                //console.error('Error adding incident:', error);
                 setError('Error al agregar el incidente.');
             }
         } else {
@@ -153,7 +157,8 @@ const IncidentList: React.FC = () => {
                 //refrescamos la lista de incidentes para ver los cambios realizados
                 setRefreshIncidents(prev => !prev);
             } catch (error) {
-                console.error('Error updating incident:', error);
+                logger.error('Error updating incident:' + error);
+                //console.error('Error updating incident:', error);
                 setError('Error al actualizar el incidente.');
             }
         }
@@ -184,10 +189,12 @@ const IncidentList: React.FC = () => {
                     setIncidents(incidentsArray);
                 } else {
                     setIncidents([]);
-                    console.log('No incidents data available');
+                    logger.warn('No incidents data available');
+                    //console.log('No incidents data available');
                 }
             } catch (error) {
-                console.error('Error fetching incidents:', error);
+                logger.error('Error fetching incidents:' + error);
+                //console.error('Error fetching incidents:', error);
                 setError('Error al cargar los incidentes.');
             } finally {
                 setLoadingIncidents(false);
@@ -235,10 +242,12 @@ const IncidentList: React.FC = () => {
                     setAvailableUsers(usersArray);
                 } else {
                     setAvailableUsers([]);
-                    console.log('No users data available');
+                    logger.warn('No users data available');
+                    //console.log('No users data available');
                 }
             } catch (error) {
-                console.error('Error fetching users:', error);
+                logger.error('Error fetching users:' + error);
+                //console.error('Error fetching users:', error);
                 setError('Error al cargar los usuarios.');
             } finally {
                 setLoadingUsers(false);

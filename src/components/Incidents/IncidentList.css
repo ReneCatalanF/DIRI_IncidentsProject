@@ -195,6 +195,11 @@
     font-weight: bold;
 }
 
+.incident-id-close {
+    color: #4b5563;
+    font-weight: bold;
+}
+
 .incident-path {
     font-size: 0.875rem;
     color: #4b5563;

@@ -25,7 +25,12 @@ const IncidentItem: React.FC<IncidentItemProps> = ({ incident, onIncidentUpdated
 
     return (
         <div className="incident-item">
-            <div className="incident-id">INC{incident.id}</div>
+            {incident.status ? (
+                    <div className="incident-id">INC{incident.id}</div>
+                ) : (
+                    <div className="incident-id-close">INC{incident.id}</div>
+                )}
+            
             <div className="incident-title">{incident.title}</div>
             <div className="incident-path">{incident.path}</div>
             <div className="incident-assigned">{incident.assignedUser}</div>

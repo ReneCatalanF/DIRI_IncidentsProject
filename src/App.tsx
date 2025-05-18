@@ -15,6 +15,7 @@ import Register from './components/Register';
 import WelcomeComp from './components/Welcome';
 //import Foods from './components/Foods';
 import IncidentList from './components/Incidents/IncidentsAdmin';
+import IncidentListUser from './components/Incidents/IncidentUser';
 //import Menus from './components/Menu';
 //import { Link } from 'react-router-dom';
 
@@ -66,7 +67,8 @@ const App: React.FC = () => {
               <Route path="/" element={<WelcomeComp/>} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
-              <Route path="/dashboard" element={<ProtectedRoute><IncidentList /></ProtectedRoute>} />
+              <Route path="/dashboard" element={<AdminRoute><IncidentList /></AdminRoute>} />
+              <Route path="/dashboard2" element={<ProtectedRoute><IncidentListUser /></ProtectedRoute>} />
               <Route path="/admin" element={<AdminRoute><Menus /></AdminRoute>} />
               <Route path="*" element={<WelcomeComp />} />
             </Routes>

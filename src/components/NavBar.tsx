@@ -29,7 +29,7 @@ export const Navbar: React.FC = () => {
         <nav className="navbar">
             <ul className="nav-menu">
                 {user && roles && roles.includes(Role.USER) && (
-                    <li><Link to="/">My Incidents</Link></li>
+                    <li><Link to="/dashboard2">My Incidents</Link></li>
                 )}
 
                 {user && roles && roles.includes(Role.ADMIN) && (

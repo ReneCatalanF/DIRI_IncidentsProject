@@ -8,9 +8,10 @@ import { User } from '../../entites/incidentsEntities';
 interface IncidentItemProps {
     incident: Incident;
     onIncidentUpdated: () => void;
+    onIncidentClick: (incident: Incident) => void;
 }
 
-const IncidentItem: React.FC<IncidentItemProps> = ({ incident, onIncidentUpdated }) => {
+const IncidentItem: React.FC<IncidentItemProps> = ({ incident, onIncidentUpdated, onIncidentClick }) => {
     const handleCloseIncident = async () => {
         const database = getDatabase(app);
         const incidentRef = ref(database, `incidents/${incident.id}`);
@@ -24,13 +25,13 @@ const IncidentItem: React.FC<IncidentItemProps> = ({ incident, onIncidentUpdated
     };
 
     return (
-        <div className="incident-item">
+        <div className="incident-item" onClick={() => onIncidentClick(incident)} style={{ cursor: 'pointer' }}>
             {incident.status ? (
-                    <div className="incident-id">INC{incident.id}</div>
-                ) : (
-                    <div className="incident-id-close">INC{incident.id}</div>
-                )}
-            
+                <div className="incident-id">INC{incident.id}</div>
+            ) : (
+                <div className="incident-id-close">INC{incident.id}</div>
+            )}
+
             <div className="incident-title">{incident.title}</div>
             <div className="incident-path">{incident.path}</div>
             <div className="incident-assigned">{incident.assignedUser}</div>
@@ -60,6 +61,9 @@ const IncidentList: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [refreshIncidents, setRefreshIncidents] = useState(false);
 
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
+
     const openModal = () => {
         setIsModalOpen(true);
     };
@@ -69,6 +73,16 @@ const IncidentList: React.FC = () => {
         setNewIncidentTitle('');
         setNewIncidentPath('');
         setAssignedUserEmail('');
+    };
+
+    const openEditModal = (incident: Incident) => {
+        setSelectedIncident(incident);
+        setIsEditModalOpen(true);
+    };
+
+    const closeEditModal = () => {
+        setIsEditModalOpen(false);
+        setSelectedIncident(null);
     };
 
     const handleInputChange = (
@@ -119,6 +133,32 @@ const IncidentList: React.FC = () => {
     const handleIncidentUpdated = () => {
         setRefreshIncidents(prev => !prev);
     };
+
+    const handleUpdateIncident = async () => {
+        if (selectedIncident) {
+            const database = getDatabase(app);
+            const incidentRef = ref(database, `incidents/${selectedIncident.id}`);
+
+            try {
+                // creamos el incidente temporal
+                const updateData: Partial<Incident> = {
+                    title: selectedIncident.title,
+                    path: selectedIncident.path,
+                    assignedUser: selectedIncident.assignedUser,
+                };
+
+                await update(incidentRef, updateData);
+                closeEditModal();
+
+                //refrescamos la lista de incidentes para ver los cambios realizados
+                setRefreshIncidents(prev => !prev);
+            } catch (error) {
+                console.error('Error updating incident:', error);
+                setError('Error al actualizar el incidente.');
+            }
+        }
+    };
+
 
     useEffect(() => {
         const fetchIncidents = async () => {
@@ -260,6 +300,7 @@ const IncidentList: React.FC = () => {
                     key={incident.id}
                     incident={incident}
                     onIncidentUpdated={handleIncidentUpdated}
+                    onIncidentClick={openEditModal}
                 />
             ))}
 
@@ -318,8 +359,72 @@ const IncidentList: React.FC = () => {
                     </div>
                 </div>
             )}
+            {isEditModalOpen && selectedIncident && (
+                <div className="modal-overlay">
+                    <div className="modal">
+                        <div className="modal-header">
+                            <h2>Incidente INC{selectedIncident.id}</h2>
+                            <button onClick={closeEditModal}>
+                                <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                            </button>
+                        </div>
+                        <div className="modal-content">
+                            <label htmlFor="editTitle">Título</label>
+                            <input
+                                type="text"
+                                id="editTitle"
+                                name="title"
+                                value={selectedIncident.title}
+                                onChange={(e) => setSelectedIncident({ ...selectedIncident, title: e.target.value })} // Manejar cambios
+                            />
+
+                            <label htmlFor="editPath">Ubicación</label>
+                            <input
+                                type="text"
+                                id="editPath"
+                                name="path"
+                                value={selectedIncident.path}
+                                onChange={(e) => setSelectedIncident({ ...selectedIncident, path: e.target.value })} // Manejar cambios
+                            />
+
+                            <label htmlFor="editAssignedUser">Personal Asignado</label>
+                            <select
+                                id="editAssignedUser"
+                                name="assignedUser"
+                                value={selectedIncident.assignedUser}
+                                onChange={(e) => setSelectedIncident({ ...selectedIncident, assignedUser: e.target.value })} // Manejar cambios
+                            >
+                                <option value="">Seleccionar usuario</option>
+                                {availableUsers.map((user) => (
+                                    <option key={user.uid} value={user.email}>
+                                        {user.email}
+                                    </option>
+                                ))}
+                            </select>
+
+                            <div className="modal-footer">
+                                <button className="confirm-button" onClick={handleUpdateIncident}> {/* Llamar a la función de actualización */}
+                                    Guardar
+                                </button>
+                                
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
 
 export default IncidentList;
+
+/*
+{selectedIncident.status && (
+                                    <button className="close-incident-button" onClick={() => { closeEditModal(); handleCloseIncident(); }}>
+                                        Cerrar incidente
+                                    </button>
+                                )} 
+*/

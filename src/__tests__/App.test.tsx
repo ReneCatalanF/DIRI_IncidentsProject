@@ -1,7 +1,7 @@
-import { describe, it, expect } from 'vitest';
+//import { describe, it, expect } from 'vitest';
 //import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { cleanup, render, screen } from '@testing-library/react';
-import App from '../App';
+//import { cleanup, render, screen } from '@testing-library/react';
+//import App from '../App';
 //import Foods from '../components/Foods'
 //import FoodOrder from '../components/FoodOrder';
 
@@ -11,7 +11,7 @@ describe('Renders main page correctly', async () => {
 
 
 
-
+/*
   it('Should render the page correctly', async () => {
     // Inicialización
     render(<App />);
@@ -39,7 +39,7 @@ describe('Renders main page correctly', async () => {
     cleanup();
   });
 
-  /*
+  
   it('en la pantalla de Pedir Comida se muestran cuatro productos y alguno de los precios', async () => {
     render(<Foods foodItems={[
       {

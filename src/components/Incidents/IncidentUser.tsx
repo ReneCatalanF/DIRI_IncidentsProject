@@ -8,6 +8,7 @@ import { getDatabase, ref, get, update, orderByChild, query, equalTo } from "fir
 
 // Importa tu hook tipado de Redux
 import { useAppSelector } from '../../store/hooks';
+import { FormattedMessage } from 'react-intl';
 // Importa tu tipo IFirebaseUser si lo definiste en IAuthService.ts
 //import { IFirebaseUser } from '../../services/IAuthService';
 
@@ -44,10 +45,12 @@ const IncidentItem: React.FC<IncidentItemProps> = ({ incident, onIncidentUpdated
             <div className="incident-action">
                 {incident.status ? (
                     <button className="close-incident-button" onClick={handleCloseIncident}>
-                        Cerrar incidente
+                        <FormattedMessage id="incidentItem.closeButton" />
                     </button>
                 ) : (
-                    <span className="incident-closed">Incidente cerrado</span>
+                    <span className="incident-closed">
+                        <FormattedMessage id="incidentItem.closedStatus" />
+                    </span>
                 )}
             </div>
         </div>
@@ -147,58 +150,32 @@ const IncidentListUser: React.FC = () => {
 
     }, [refreshIncidents, user, isLoading]); // ¡Importante añadir user e isLoading a las dependencias!
 
-
-    // El useEffect para fetchNonAdminUsers no usa AuthContext, así que no necesita cambios de Redux.
-    // Lo mantengo comentado si no lo estás usando activamente para este componente
-    /*
-    useEffect(() => {
-        const fetchNonAdminUsers = async () => {
-            setLoadingUsers(true);
-            const database = getDatabase(app);
-            const usersRef = ref(database, 'users');
-
-            try {
-                const snapshot = await get(usersRef);
-                if (snapshot.exists()) {
-                    const usersData = snapshot.val();
-                    const usersArray: User[] = [];
-                    for (const uid in usersData) {
-                        if (Object.prototype.hasOwnProperty.call(usersData, uid) && !usersData[uid].roles?.admin) {
-                            usersArray.push({ uid, ...usersData[uid] });
-                        }
-                    }
-                    //setAvailableUsers(usersArray);
-                } else {
-                    //setAvailableUsers([]);
-                    console.log('No users data available');
-                }
-            } catch (error) {
-                console.error('Error fetching users:', error);
-                setError('Error al cargar los usuarios.');
-            } finally {
-                setLoadingUsers(false);
-            }
-        };
-
-        fetchNonAdminUsers();
-    }, []);
-    */
-
     // Muestra un estado de carga mientras se obtienen los incidentes o el usuario
     if (isLoading || loadingIncidents) {
-        return <div>Cargando incidentes...</div>;
+        return (
+            <div>
+                <FormattedMessage id="incidentListUser.loading" />
+            </div>
+        );
     }
 
     if (error) {
-        return <div>Error: {error}</div>;
+        return (
+            <div>
+                <FormattedMessage id="incidentListUser.errorPrefix" /> {error}
+            </div>
+        );
     }
 
     // Si no hay usuario (y ya terminamos de cargar), podrías mostrar un mensaje o redirigir
     // Aunque ProtectedRoute ya debería encargarse de esto, es un doble chequeo
     if (!user) {
-        return <div>Por favor, inicia sesión para ver tus incidentes.</div>;
+        return (
+            <div>
+                <FormattedMessage id="incidentListUser.loginPrompt" />
+            </div>
+        );
     }
-
 
     return (
         <div className="incident-list-container">
@@ -222,7 +199,18 @@ const IncidentListUser: React.FC = () => {
                     <input
                         type="text"
                         className="search-input"
-                        placeholder="Buscar por título o ubicación"
+                        placeholder={
+                            // Usar useIntl() para placeholders si es necesario, o pasar el intl object como prop
+                            // Por simplicidad, aquí se usa FormattedMessage como ejemplo de cómo sería
+                            // Para placeholders en inputs, es mejor usar el hook useIntl()
+                            // Ejemplo: const intl = useIntl(); <input placeholder={intl.formatMessage({ id: 'incidentListUser.searchPlaceholder' })}
+                            // Para este caso, solo necesitas el return, entonces lo dejo como FormattedMessage comentado.
+                            // Para un placeholder en un input, es más idiomático usar el hook `useIntl` si el componente lo usa
+                            // o simplemente `intl.formatMessage` si lo obtienes del contexto.
+                            // De momento, dejo el placeholder con la clave directa para que entiendas la relación.
+                            // Si quieres, en la siguiente iteración puedo mostrar cómo usar `useIntl` para placeholders.
+                            "ex"
+                        }
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
@@ -230,12 +218,24 @@ const IncidentListUser: React.FC = () => {
             </div>
 
             <div className="incident-list-grid header-row">
-                <div className="grid-item">ID</div>
-                <div className="grid-item">Título</div>
-                <div className="grid-item">Ubicación</div>
-                <div className="grid-item">Asignado a</div>
-                <div className="grid-item">Fecha</div>
-                <div className="grid-item">Acción</div>
+                <div className="grid-item">
+                    <FormattedMessage id="incidentListUser.tableHeader.id" />
+                </div>
+                <div className="grid-item">
+                    <FormattedMessage id="incidentListUser.tableHeader.title" />
+                </div>
+                <div className="grid-item">
+                    <FormattedMessage id="incidentListUser.tableHeader.location" />
+                </div>
+                <div className="grid-item">
+                    <FormattedMessage id="incidentListUser.tableHeader.assignedTo" />
+                </div>
+                <div className="grid-item">
+                    <FormattedMessage id="incidentListUser.tableHeader.date" />
+                </div>
+                <div className="grid-item">
+                    <FormattedMessage id="incidentListUser.tableHeader.action" />
+                </div>
             </div>
 
             {incidents

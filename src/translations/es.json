@@ -1,0 +1,20 @@
+{
+    "navbar.myIncidents": "Mis Incidentes",
+    "navbar.incidents": "Incidentes",
+    "navbar.userRoles": "Roles de Usuario",
+    "navbar.login": "Iniciar Sesión",
+    "navbar.register": "Registro",
+    "navbar.logout": "Cerrar Sesión",
+    "incidentItem.closeButton": "Cerrar incidente",
+    "incidentItem.closedStatus": "Incidente cerrado",
+    "incidentListUser.loading": "Cargando incidentes...",
+    "incidentListUser.errorPrefix": "Error:",
+    "incidentListUser.loginPrompt": "Inicia sesión para ver tus incidentes.",
+    "incidentListUser.searchPlaceholder": "Buscar por título o ubicación",
+    "incidentListUser.tableHeader.id": "ID",
+    "incidentListUser.tableHeader.title": "Título",
+    "incidentListUser.tableHeader.location": "Ubicación",
+    "incidentListUser.tableHeader.assignedTo": "Asignado a",
+    "incidentListUser.tableHeader.date": "Fecha",
+    "incidentListUser.tableHeader.action": "Acción"
+}

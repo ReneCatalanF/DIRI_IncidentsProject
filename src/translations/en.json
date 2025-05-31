@@ -1,0 +1,20 @@
+{
+    "navbar.myIncidents": "My Incidents",
+    "navbar.incidents": "Incidents",
+    "navbar.userRoles": "User Roles",
+    "navbar.login": "Login",
+    "navbar.register": "Register",
+    "navbar.logout": "Logout",
+    "incidentItem.closeButton": "Close Incident",
+    "incidentItem.closedStatus": "Incident Closed",
+    "incidentListUser.loading": "Loading incidents...",
+    "incidentListUser.errorPrefix": "Error:",
+    "incidentListUser.loginPrompt": "Please log in to view your incidents.",
+    "incidentListUser.searchPlaceholder": "Search by title or location",
+    "incidentListUser.tableHeader.id": "ID",
+    "incidentListUser.tableHeader.title": "Title",
+    "incidentListUser.tableHeader.location": "Location",
+    "incidentListUser.tableHeader.assignedTo": "Assigned To",
+    "incidentListUser.tableHeader.date": "Date",
+    "incidentListUser.tableHeader.action": "Action"
+}

@@ -1,9 +1,11 @@
 import { configureStore } from '@reduxjs/toolkit';
-import authReducer from './slices/authSlice'; // Importa tu nuevo authReducer
+import authReducer from './slices/authSlice';
+import i18nReducer from './slices/i18nSlice';
 
 export const store = configureStore({
     reducer: {
-        auth: authReducer, // Asigna el authReducer a la clave 'auth' en tu store
+        auth: authReducer,
+        i18n: i18nReducer,
     },
 });
 

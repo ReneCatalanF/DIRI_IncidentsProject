@@ -1,12 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/AuthServide';
-import '../App.css';
 import { useAppDispatch } from '../store/hooks';
 import { setLoading, setAuthError } from '../store/slices/authSlice';
-// === IMPORTACIONES PARA INTERNACIONALIZACIÓN ===
 import { FormattedMessage, useIntl } from 'react-intl';
-// ===============================================
 
 export const Login: React.FC = () => {
     const [email, setEmail] = useState<string>('');
@@ -14,9 +11,7 @@ export const Login: React.FC = () => {
     const [error, setError] = useState<string>('');
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
-    // === INICIALIZACIÓN DEL HOOK useIntl ===
     const intl = useIntl();
-    // =====================================
 
     const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -39,24 +34,41 @@ export const Login: React.FC = () => {
     };
 
     return (
-        <form onSubmit={handleLogin}>
-            <h2><FormattedMessage id="login.title" /></h2>
-            <input
-                type="email"
-                placeholder={intl.formatMessage({ id: 'login.placeholder.email' })}
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-            />
-            <input
-                type="password"
-                placeholder={intl.formatMessage({ id: 'login.placeholder.password' })}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-            />
-            <button type="submit">
-                <FormattedMessage id="login.button.login" />
-            </button>
-            {error && <p className="error-message">{error}</p>} {/* Los errores de Firebase se muestran directamente */}
-        </form>
+        <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
+            <form onSubmit={handleLogin} className="bg-white p-8 rounded-lg shadow-md w-full max-w-sm">
+                <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">
+                    <FormattedMessage id="login.title" />
+                </h2>
+                <div className="mb-4">
+                    <input
+                        type="email"
+                        placeholder={intl.formatMessage({ id: 'login.placeholder.email' })}
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                </div>
+                <div className="mb-6">
+                    <input
+                        type="password"
+                        placeholder={intl.formatMessage({ id: 'login.placeholder.password' })}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                </div>
+                <button
+                    type="submit"
+                    className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200"
+                >
+                    <FormattedMessage id="login.button.login" />
+                </button>
+                {error && (
+                    <p className="text-red-500 text-sm mt-4 text-center">
+                        {error}
+                    </p>
+                )}
+            </form>
+        </div>
     );
 };

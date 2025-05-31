@@ -5,7 +5,7 @@ import { Role } from '../../services/IAuthService';
 // Define la interfaz para el estado de autenticación
 interface AuthState {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    user: any | null; // Usando unknown como me indicaste
+    user: any | null;
     roles: Role[] | null;
     isLoading: boolean;
     error: string | null;
@@ -19,15 +19,10 @@ const initialState: AuthState = {
     error: null,
 };
 
-// Thunk asíncrono para obtener roles del usuario
-// Añadimos los tipos genéricos:
-// 1. Tipo de lo que devuelve en caso de éxito (Role[])
-// 2. Tipo del argumento que recibe el thunk (unknown, ya que currentUser puede ser el objeto de Firebase.User o null temporalmente)
-// 3. Tipo del objeto de configuración de la API del thunk, donde especificamos 'rejectValue' como 'string'
 export const fetchUserRoles = createAsyncThunk<
-    Role[],        // Tipo retornado cuando es 'fulfilled'
+    Role[],        
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    any,       // Tipo del argumento del thunk (currentUser de Firebase.User | null)
+    any,       
     { rejectValue: string }>(
     'auth/fetchUserRoles',
     async (currentUser, { rejectWithValue }) => {
@@ -47,13 +42,13 @@ export const fetchUserRoles = createAsyncThunk<
     }
 );
 
-// ... (el resto de tu authSlice.ts permanece igual)
+
 export const authSlice = createSlice({
     name: 'auth',
     initialState,
     reducers: {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        setUser: (state, action: PayloadAction<any | null>) => { // Usando unknown
+        setUser: (state, action: PayloadAction<any | null>) => { 
             state.user = action.payload;
             if (!action.payload) {
                 state.roles = null;
@@ -93,8 +88,7 @@ export const authSlice = createSlice({
             .addCase(fetchUserRoles.rejected, (state, action) => {
                 state.isLoading = false;
                 state.roles = null;
-                // Aquí, 'action.payload' es el valor que pasamos a 'rejectWithValue',
-                // que ahora TypeScript sabe que es un string.
+                
                 state.error = action.payload as string;
             });
     },

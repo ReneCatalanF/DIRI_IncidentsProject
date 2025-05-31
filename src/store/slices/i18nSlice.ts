@@ -5,14 +5,14 @@ interface I18nState {
     locale: string;
 }
 
-// Función auxiliar para obtener el idioma inicial (igual que en App.tsx)
+// Función auxiliar para obtener el idioma inicial
 const getInitialLocale = (): string => {
     const savedLocale = localStorage.getItem('locale');
-    if (savedLocale && ['es', 'en'].includes(savedLocale)) { // Asegúrate de que el idioma guardado sea válido
+    if (savedLocale && ['es', 'en'].includes(savedLocale)) {
         return savedLocale;
     }
     const browserLang = navigator.language.split('-')[0];
-    if (['es', 'en'].includes(browserLang)) { // Asegúrate de que el idioma del navegador sea válido
+    if (['es', 'en'].includes(browserLang)) { 
         return browserLang;
     }
     return 'es'; // Idioma por defecto
@@ -28,7 +28,7 @@ const i18nSlice = createSlice({
     reducers: {
         setLocale: (state, action: PayloadAction<string>) => {
             state.locale = action.payload;
-            localStorage.setItem('locale', action.payload); // Guarda el locale en localStorage
+            localStorage.setItem('locale', action.payload);
         },
     },
 });

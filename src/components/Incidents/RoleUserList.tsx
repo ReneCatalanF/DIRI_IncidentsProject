@@ -1,15 +1,20 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react'; // Elimina 'useContext' de aquí
 import { app } from "../../services/FirebaseStorage";
 import { getDatabase, ref, get, update } from "firebase/database";
-import { User } from '../../entites/incidentsEntities';
-import './RoleUserList.css'; // Crea este archivo CSS
-import { AuthContext } from '../../contexts/AuthContext';
+import { User } from '../../entites/incidentsEntities'; // Asegúrate de que esta User tenga la estructura correcta
+// import './RoleUserList.css'; // ¡ELIMINA ESTA LÍNEA!
+// import { AuthContext } from '../../contexts/AuthContext'; // ¡ELIMINA ESTA LÍNEA!
+
+// Importa tu hook tipado de Redux
+import { useAppSelector } from '../../store/hooks';
 
 const RolesAdmin: React.FC = () => {
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const { user: loggedInUser } = useContext(AuthContext);
+
+    // Usa useAppSelector para obtener el usuario logueado y el estado de carga desde Redux
+    const { user: loggedInUser, isLoading: authLoading } = useAppSelector((state) => state.auth);
 
     useEffect(() => {
         const fetchUsers = async () => {
@@ -40,8 +45,17 @@ const RolesAdmin: React.FC = () => {
             }
         };
 
-        fetchUsers();
-    }, [loggedInUser?.uid]);
+        // Solo busca usuarios si el usuario logueado está disponible y la autenticación no está cargando
+        if (loggedInUser && !authLoading) {
+            fetchUsers();
+        } else if (!authLoading && !loggedInUser) {
+            // Si no está cargando y no hay un usuario logueado, no mostramos nada o un mensaje
+            setUsers([]);
+            setLoading(false);
+            setError('No hay usuario logueado para administrar roles.');
+        }
+
+    }, [loggedInUser?.uid, authLoading]); // Asegúrate de que las dependencias incluyan authLoading
 
     const handleRoleChange = async (uid: string, isAdmin: boolean) => {
         const database = getDatabase(app);
@@ -61,30 +75,32 @@ const RolesAdmin: React.FC = () => {
         }
     };
 
-    if (loading) {
-        return <div>Cargando usuarios...</div>;
+    if (loading || authLoading) { // Combina el estado de carga local con el de autenticación global
+        return <div className="p-4 text-center text-lg font-semibold">Cargando usuarios...</div>;
     }
 
     if (error) {
-        return <div>Error: {error}</div>;
+        return <div className="p-4 text-center text-red-600 font-bold">Error: {error}</div>;
     }
 
     return (
-        <div className="roles-admin-container">
-            <h2>Administración de Roles</h2>
-            <div className="user-list">
+        <div className="p-5"> {/* roles-admin-container */}
+            <h2 className="text-2xl font-bold mb-5">Administración de Roles</h2> {/* roles-admin-container h2 */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5"> {/* user-list */}
                 {users.map(user => (
-                    <div key={user.uid} className="user-card">
-                        <h3>{user.email}</h3>
-                        <div className="role-toggle">
+                    <div key={user.uid} className="border border-gray-300 p-4 rounded-lg text-center shadow-sm"> {/* user-card */}
+                        <h3 className="text-xl font-semibold mb-2">{user.email}</h3> {/* user-card h3 */}
+                        <div className="flex justify-center gap-2"> {/* role-toggle */}
                             <button
-                                className={`role-button ${user.roles?.admin ? 'active' : ''}`}
+                                className={`py-2 px-4 border rounded-md cursor-pointer transition-colors duration-300 ease-in-out
+                                    ${user.roles?.admin ? 'bg-green-600 text-white border-green-600 hover:bg-green-700' : 'bg-white text-gray-800 border-gray-300 hover:bg-gray-100'}`}
                                 onClick={() => handleRoleChange(user.uid, true)}
                             >
                                 Admin
                             </button>
                             <button
-                                className={`role-button ${!user.roles?.admin ? 'active' : ''}`}
+                                className={`py-2 px-4 border rounded-md cursor-pointer transition-colors duration-300 ease-in-out
+                                    ${!user.roles?.admin ? 'bg-green-600 text-white border-green-600 hover:bg-green-700' : 'bg-white text-gray-800 border-gray-300 hover:bg-gray-100'}`}
                                 onClick={() => handleRoleChange(user.uid, false)}
                             >
                                 Personal

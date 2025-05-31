@@ -2,58 +2,61 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/AuthServide';
 import '../App.css';
-import { useAppDispatch } from '../store/hooks'; // Importa useAppDispatch
-import { setLoading, setAuthError } from '../store/slices/authSlice'; // Importa acciones para manejo de errores/carga (opcional)
+import { useAppDispatch } from '../store/hooks';
+import { setLoading, setAuthError } from '../store/slices/authSlice';
+// === IMPORTACIONES PARA INTERNACIONALIZACIÓN ===
+import { FormattedMessage, useIntl } from 'react-intl';
+// ===============================================
 
 export const Login: React.FC = () => {
     const [email, setEmail] = useState<string>('');
     const [password, setPassword] = useState<string>('');
-    const [error, setError] = useState<string>(''); // Este error es local del formulario
+    const [error, setError] = useState<string>('');
     const navigate = useNavigate();
-    const dispatch = useAppDispatch(); // Obtén el dispatcher
+    const dispatch = useAppDispatch();
+    // === INICIALIZACIÓN DEL HOOK useIntl ===
+    const intl = useIntl();
+    // =====================================
 
     const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        setError(''); // Limpia el error local del formulario
-        dispatch(setAuthError(null)); // Opcional: Limpia errores de Redux
-        dispatch(setLoading(true)); // Opcional: Indica que la carga de login ha empezado
+        setError('');
+        dispatch(setAuthError(null));
+        dispatch(setLoading(true));
 
         try {
             const userCredential = await authService.signIn(email, password);
             console.log("Usuario autenticado:", userCredential.user);
-
-            // Firebase onAuthStateChanged en App.tsx ya manejará la actualización del store de Redux.
-            // No necesitamos despachar setUser o setRoles aquí directamente.
-
-            navigate('/'); // Navega a la página principal
-
+            navigate('/');
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } catch (error: any) { // El error local del formulario
+        } catch (error: any) {
             console.error("Error al iniciar sesión:", error);
-            setError(error.message); // Muestra el error en el formulario
-            dispatch(setAuthError(error.message)); // Opcional: Guarda el error también en Redux
+            setError(error.message);
+            dispatch(setAuthError(error.message));
         } finally {
-            dispatch(setLoading(false)); // Opcional: Finaliza la carga de login
+            dispatch(setLoading(false));
         }
     };
 
     return (
         <form onSubmit={handleLogin}>
-            <h2>Iniciar Sesión</h2>
+            <h2><FormattedMessage id="login.title" /></h2>
             <input
                 type="email"
-                placeholder="Correo electrónico"
+                placeholder={intl.formatMessage({ id: 'login.placeholder.email' })}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
             />
             <input
                 type="password"
-                placeholder="Contraseña"
+                placeholder={intl.formatMessage({ id: 'login.placeholder.password' })}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
             />
-            <button type="submit">Login</button>
-            {error && <p className="error-message">{error}</p>}
+            <button type="submit">
+                <FormattedMessage id="login.button.login" />
+            </button>
+            {error && <p className="error-message">{error}</p>} {/* Los errores de Firebase se muestran directamente */}
         </form>
     );
 };

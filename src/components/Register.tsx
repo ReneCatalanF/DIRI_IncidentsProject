@@ -1,73 +1,78 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { authService } from "../services/AuthServide";
-import '../App.css'; // Asegúrate de que la ruta sea correcta
+import '../App.css';
 
-import { useAppDispatch } from '../store/hooks'; // Importa useAppDispatch
-import { setLoading, setAuthError } from '../store/slices/authSlice'; // Acciones opcionales para manejo de carga/errores
+import { useAppDispatch } from '../store/hooks';
+import { setLoading, setAuthError } from '../store/slices/authSlice';
+// === IMPORTACIONES PARA INTERNACIONALIZACIÓN ===
+import { FormattedMessage, useIntl } from 'react-intl';
+// ===============================================
 
 const Register: React.FC = () => {
     const [email, setEmail] = useState<string>('');
     const [password, setPassword] = useState<string>('');
-    const [error, setError] = useState<string>(''); // Error local del formulario
-    const [success, setSuccess] = useState<string>(''); // Mensaje de éxito local
+    const [error, setError] = useState<string>('');
+    const [success, setSuccess] = useState<string>('');
     const navigate = useNavigate();
-    const dispatch = useAppDispatch(); // Obtén el dispatcher de Redux
+    const dispatch = useAppDispatch();
+    // === INICIALIZACIÓN DEL HOOK useIntl ===
+    const intl = useIntl();
+    // =====================================
 
     const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        setError(''); // Limpia el error local
-        setSuccess(''); // Limpia el mensaje de éxito local
+        setError('');
+        setSuccess('');
 
-        dispatch(setAuthError(null)); // Opcional: Limpia errores previos en el store de Redux
-        dispatch(setLoading(true)); // Opcional: Indica que el proceso de registro ha empezado
+        dispatch(setAuthError(null));
+        dispatch(setLoading(true));
 
         try {
-            // Realiza el registro con Firebase
             const userCredential = await authService.signUp(email, password);
             console.log("Usuario registrado:", userCredential.user);
 
-            // Establece los roles iniciales en tu base de datos
             await authService.setUserRoles(userCredential.user.uid, {
                 email: userCredential.user.email,
-                roles: { admin: false } // Asigna el rol de usuario normal por defecto
+                roles: { admin: false }
             });
 
-            // Firebase onAuthStateChanged en App.tsx se encargará de actualizar el store de Redux
-            // con el nuevo usuario y sus roles después de este registro exitoso.
-
-            setSuccess('Registro exitoso. Redirigiendo...');
+            // === MENSAJE DE ÉXITO TRADUCIDO ===
+            setSuccess(intl.formatMessage({ id: 'register.successMessage' }));
+            // ==================================
             setTimeout(() => {
-                navigate('/'); // Redirige al dashboard o la página principal
+                navigate('/');
             }, 2000);
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } catch (error: any) { // Captura el error de Firebase/servicio
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } catch (error: any) {
             console.error("Error al registrarse:", error);
-            setError(error.message); // Muestra el error en el formulario
-            dispatch(setAuthError(error.message)); // Opcional: Guarda el error en el store de Redux
+            setError(error.message);
+            dispatch(setAuthError(error.message));
         } finally {
-            dispatch(setLoading(false)); // Opcional: Finaliza el estado de carga
+            dispatch(setLoading(false));
         }
     };
 
     return (
         <form onSubmit={handleRegister}>
-            <h2>Registrarse</h2>
+            <h2><FormattedMessage id="register.title" /></h2>
             <input
                 type="email"
-                placeholder="Correo electrónico"
+                placeholder={intl.formatMessage({ id: 'register.placeholder.email' })}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
             />
             <input
                 type="password"
-                placeholder="Contraseña"
+                placeholder={intl.formatMessage({ id: 'register.placeholder.password' })}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
             />
-            <button type="submit">Registrarse</button>
-            {error && <p className="error-message">{error}</p>}
+            <button type="submit">
+                <FormattedMessage id="register.button.register" />
+            </button>
+            {error && <p className="error-message">{error}</p>} {/* Los errores de Firebase se muestran directamente */}
             {success && <p className="success-message">{success}</p>}
         </form>
     );

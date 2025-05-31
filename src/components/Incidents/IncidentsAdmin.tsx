@@ -6,6 +6,9 @@ import { getDatabase, ref, get, update, orderByChild, query, push } from "fireba
 import { User } from '../../entites/incidentsEntities';
 
 import logger from "../../services/logging";
+// === IMPORTACIONES PARA INTERNACIONALIZACIÓN ===
+import { FormattedMessage, useIntl } from 'react-intl'; // Asegúrate de importar useIntl
+// ===============================================
 
 interface IncidentItemProps {
     incident: Incident;
@@ -24,7 +27,6 @@ const IncidentItem: React.FC<IncidentItemProps> = ({ incident, onIncidentUpdated
             onIncidentUpdated();
         } catch (error) {
             logger.error('Error closing incident:' + error);
-            //console.error('Error closing incident:', error);
         }
     };
 
@@ -44,16 +46,16 @@ const IncidentItem: React.FC<IncidentItemProps> = ({ incident, onIncidentUpdated
                 <div className="incident-action">
                     {incident.status ? (
                         <button className="close-incident-button" onClick={handleCloseIncident}>
-                            Cerrar incidente
+                            <FormattedMessage id="incidentItem.closeButton" />
                         </button>
                     ) : (
-                        <span className="incident-closed">Incidente cerrado</span>
+                        <span className="incident-closed">
+                            <FormattedMessage id="incidentItem.closedStatus" />
+                        </span>
                     )}
                 </div>
             </div>
-
         </>
-
     );
 };
 
@@ -72,8 +74,11 @@ const IncidentList: React.FC = () => {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
 
-    //Para filtrar por titulo o ubicacion los incidentes
     const [searchTerm, setSearchTerm] = useState('');
+
+    // === INICIALIZACIÓN DEL HOOK useIntl ===
+    const intl = useIntl();
+    // =====================================
 
     const openModal = () => {
         logger.info('Open create Modal');
@@ -124,9 +129,8 @@ const IncidentList: React.FC = () => {
             const database = getDatabase(app);
             const incidentsRef = ref(database, 'incidents');
 
-
             const newIncidentData: Omit<Incident, 'id'> = {
-                fecha: new Date().toLocaleString('es-ES'),
+                fecha: new Date().toLocaleString('es-ES'), // Ojo: Aquí la fecha sigue siendo es-ES. Si quieres que se muestre en el idioma seleccionado, deberías formatearla con intl.formatDate.
                 assignedUser: assignedUserEmail,
                 title: newIncidentTitle,
                 path: newIncidentPath,
@@ -140,12 +144,13 @@ const IncidentList: React.FC = () => {
                 setRefreshIncidents(prev => !prev);
             } catch (error) {
                 logger.error('Error adding incident:' + error);
-                //console.error('Error adding incident:', error);
                 setError('Error al agregar el incidente.');
             }
         } else {
             logger.info('Missing param');
-            alert('Por favor, completa todos los campos.');
+            // === ALERTA TRADUCIDA ===
+            alert(intl.formatMessage({ id: 'incidentList.createModal.missingFieldsAlert' }));
+            // ========================
         }
     };
 
@@ -160,7 +165,6 @@ const IncidentList: React.FC = () => {
             const incidentRef = ref(database, `incidents/${selectedIncident.id}`);
 
             try {
-                // creamos el incidente temporal
                 const updateData: Partial<Incident> = {
                     title: selectedIncident.title,
                     path: selectedIncident.path,
@@ -170,17 +174,13 @@ const IncidentList: React.FC = () => {
                 await update(incidentRef, updateData);
                 logger.info('Update Incident ' + updateData.title);
                 closeEditModal();
-
-                //refrescamos la lista de incidentes para ver los cambios realizados
                 setRefreshIncidents(prev => !prev);
             } catch (error) {
                 logger.error('Error updating incident:' + error);
-                //console.error('Error updating incident:', error);
                 setError('Error al actualizar el incidente.');
             }
         }
     };
-
 
     useEffect(() => {
         const fetchIncidents = async () => {
@@ -201,24 +201,21 @@ const IncidentList: React.FC = () => {
                         .sort((a, b) => {
                             const dateA = parseDateString(a.fecha);
                             const dateB = parseDateString(b.fecha);
-                            return dateB.getTime() - dateA.getTime(); // Newest first
+                            return dateB.getTime() - dateA.getTime();
                         });
                     logger.info('Get Incidents: ' + incidentsArray);
                     setIncidents(incidentsArray);
                 } else {
                     setIncidents([]);
                     logger.warn('No incidents data available');
-                    //console.log('No incidents data available');
                 }
             } catch (error) {
                 logger.error('Error fetching incidents:' + error);
-                //console.error('Error fetching incidents:', error);
                 setError('Error al cargar los incidentes.');
             } finally {
                 setLoadingIncidents(false);
             }
         };
-
 
         const parseDateString = (dateString: string | undefined): Date => {
             if (!dateString) {
@@ -262,11 +259,9 @@ const IncidentList: React.FC = () => {
                 } else {
                     setAvailableUsers([]);
                     logger.warn('No users data available');
-                    //console.log('No users data available');
                 }
             } catch (error) {
                 logger.error('Error fetching users:' + error);
-                //console.error('Error fetching users:', error);
                 setError('Error al cargar los usuarios.');
             } finally {
                 setLoadingUsers(false);
@@ -277,11 +272,19 @@ const IncidentList: React.FC = () => {
     }, []);
 
     if (loadingIncidents || loadingUsers) {
-        return <div>Cargando...</div>;
+        return (
+            <div>
+                <FormattedMessage id="common.loading" />
+            </div>
+        );
     }
 
     if (error) {
-        return <div>Error: {error}</div>;
+        return (
+            <div>
+                <FormattedMessage id="common.errorPrefix" /> {error}
+            </div>
+        );
     }
 
     return (
@@ -306,23 +309,35 @@ const IncidentList: React.FC = () => {
                     <input
                         type="text"
                         className="search-input"
-                        placeholder="Buscar por título o ubicación"
+                        placeholder={intl.formatMessage({ id: 'common.searchPlaceholder' })}
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
                 <button onClick={openModal} className="add-incident-button">
-                    Agregar Incidente
+                    <FormattedMessage id="incidentList.addIncidentButton" />
                 </button>
             </div>
 
             <div className="incident-list-grid header-row">
-                <div className="grid-item">ID</div>
-                <div className="grid-item">Título</div>
-                <div className="grid-item">Ubicación</div>
-                <div className="grid-item">Asignado a</div>
-                <div className="grid-item">Fecha</div>
-                <div className="grid-item">Acción</div>
+                <div className="grid-item">
+                    <FormattedMessage id="incidentList.tableHeader.id" />
+                </div>
+                <div className="grid-item">
+                    <FormattedMessage id="incidentList.tableHeader.title" />
+                </div>
+                <div className="grid-item">
+                    <FormattedMessage id="incidentList.tableHeader.location" />
+                </div>
+                <div className="grid-item">
+                    <FormattedMessage id="incidentList.tableHeader.assignedTo" />
+                </div>
+                <div className="grid-item">
+                    <FormattedMessage id="incidentList.tableHeader.date" />
+                </div>
+                <div className="grid-item">
+                    <FormattedMessage id="incidentList.tableHeader.action" />
+                </div>
             </div>
 
             {incidents
@@ -343,7 +358,7 @@ const IncidentList: React.FC = () => {
                 <div className="modal-overlay">
                     <div className="modal">
                         <div className="modal-header">
-                            <h2>Creando Incidente</h2>
+                            <h2><FormattedMessage id="incidentList.createModal.title" /></h2>
                             <button onClick={closeModal}>
                                 <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
                                     <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -352,7 +367,9 @@ const IncidentList: React.FC = () => {
                             </button>
                         </div>
                         <div className="modal-content">
-                            <label htmlFor="title">Título</label>
+                            <label htmlFor="title">
+                                <FormattedMessage id="incidentList.createModal.field.titleLabel" />
+                            </label>
                             <input
                                 type="text"
                                 id="title"
@@ -361,7 +378,9 @@ const IncidentList: React.FC = () => {
                                 onChange={handleInputChange}
                             />
 
-                            <label htmlFor="path">Ubicación</label>
+                            <label htmlFor="path">
+                                <FormattedMessage id="incidentList.createModal.field.locationLabel" />
+                            </label>
                             <input
                                 type="text"
                                 id="path"
@@ -370,14 +389,18 @@ const IncidentList: React.FC = () => {
                                 onChange={handleInputChange}
                             />
 
-                            <label htmlFor="assignedUser">Personal Asignado</label>
+                            <label htmlFor="assignedUser">
+                                <FormattedMessage id="incidentList.createModal.field.assignedPersonLabel" />
+                            </label>
                             <select
                                 id="assignedUser"
                                 name="assignedUser"
                                 value={assignedUserEmail}
                                 onChange={handleInputChange}
                             >
-                                <option value="">Seleccionar usuario</option>
+                                <option value="">
+                                    <FormattedMessage id="incidentList.createModal.field.selectUserOption" />
+                                </option>
                                 {availableUsers.map((user) => (
                                     <option key={user.uid} value={user.email}>
                                         {user.email}
@@ -387,7 +410,7 @@ const IncidentList: React.FC = () => {
 
                             <div className="modal-footer">
                                 <button onClick={handleAddIncident} className="confirm-button">
-                                    Agregar Incidente
+                                    <FormattedMessage id="incidentList.createModal.addButton" />
                                 </button>
                             </div>
                         </div>
@@ -398,7 +421,12 @@ const IncidentList: React.FC = () => {
                 <div className="modal-overlay">
                     <div className="modal">
                         <div className="modal-header">
-                            <h2>Incidente INC{selectedIncident.id}</h2>
+                            <h2>
+                                <FormattedMessage
+                                    id="incidentList.editModal.titlePrefix"
+                                    values={{ id: selectedIncident.id }}
+                                /> INC{selectedIncident.id}
+                            </h2>
                             <button onClick={closeEditModal}>
                                 <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
                                     <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -407,32 +435,40 @@ const IncidentList: React.FC = () => {
                             </button>
                         </div>
                         <div className="modal-content">
-                            <label htmlFor="editTitle">Título</label>
+                            <label htmlFor="editTitle">
+                                <FormattedMessage id="incidentList.editModal.field.titleLabel" />
+                            </label>
                             <input
                                 type="text"
                                 id="editTitle"
                                 name="title"
                                 value={selectedIncident.title}
-                                onChange={(e) => setSelectedIncident({ ...selectedIncident, title: e.target.value })} // Manejar cambios
+                                onChange={(e) => setSelectedIncident({ ...selectedIncident, title: e.target.value })}
                             />
 
-                            <label htmlFor="editPath">Ubicación</label>
+                            <label htmlFor="editPath">
+                                <FormattedMessage id="incidentList.editModal.field.locationLabel" />
+                            </label>
                             <input
                                 type="text"
                                 id="editPath"
                                 name="path"
                                 value={selectedIncident.path}
-                                onChange={(e) => setSelectedIncident({ ...selectedIncident, path: e.target.value })} // Manejar cambios
+                                onChange={(e) => setSelectedIncident({ ...selectedIncident, path: e.target.value })}
                             />
 
-                            <label htmlFor="editAssignedUser">Personal Asignado</label>
+                            <label htmlFor="editAssignedUser">
+                                <FormattedMessage id="incidentList.editModal.field.assignedPersonLabel" />
+                            </label>
                             <select
                                 id="editAssignedUser"
                                 name="assignedUser"
                                 value={selectedIncident.assignedUser}
-                                onChange={(e) => setSelectedIncident({ ...selectedIncident, assignedUser: e.target.value })} // Manejar cambios
+                                onChange={(e) => setSelectedIncident({ ...selectedIncident, assignedUser: e.target.value })}
                             >
-                                <option value="">Seleccionar usuario</option>
+                                <option value="">
+                                    <FormattedMessage id="incidentList.createModal.field.selectUserOption" /> {/* Reutilizando la clave */}
+                                </option>
                                 {availableUsers.map((user) => (
                                     <option key={user.uid} value={user.email}>
                                         {user.email}
@@ -441,10 +477,9 @@ const IncidentList: React.FC = () => {
                             </select>
 
                             <div className="modal-footer">
-                                <button className="confirm-button" onClick={handleUpdateIncident}> {/* Llamar a la función de actualización */}
-                                    Guardar
+                                <button className="confirm-button" onClick={handleUpdateIncident}>
+                                    <FormattedMessage id="incidentList.editModal.saveButton" />
                                 </button>
-
                             </div>
                         </div>
                     </div>
@@ -455,11 +490,3 @@ const IncidentList: React.FC = () => {
 };
 
 export default IncidentList;
-
-/*
-{selectedIncident.status && (
-                                    <button className="close-incident-button" onClick={() => { closeEditModal(); handleCloseIncident(); }}>
-                                        Cerrar incidente
-                                    </button>
-                                )} 
-*/

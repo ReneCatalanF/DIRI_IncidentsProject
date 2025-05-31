@@ -1,8 +1,11 @@
+import { FormattedMessage } from 'react-intl';
 
 function WelcomeComp() {
-    return(
+    return (
         <>
-            <div>Primero debes registrate O iniciar sesión</div>
+            <div>
+                <FormattedMessage id="welcome.message" />
+            </div>
         </>
     )
 }

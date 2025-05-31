@@ -1,10 +1,15 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react'; // Elimina 'useContext' de aquí
 import { Incident } from '../../entites/incidentsEntities';
 import './IncidentList.css';
 import { app } from "../../services/FirebaseStorage";
 import { getDatabase, ref, get, update, orderByChild, query, equalTo } from "firebase/database";
-import { User } from '../../entites/incidentsEntities';
-import { AuthContext } from '../../contexts/AuthContext';
+//import { User } from '../../entites/incidentsEntities'; // Asegúrate de que esta User sea la User de Firebase si la usas
+// import { AuthContext } from '../../contexts/AuthContext'; // ¡ELIMINA ESTA LÍNEA!
+
+// Importa tu hook tipado de Redux
+import { useAppSelector } from '../../store/hooks';
+// Importa tu tipo IFirebaseUser si lo definiste en IAuthService.ts
+//import { IFirebaseUser } from '../../services/IAuthService';
 
 interface IncidentItemProps {
     incident: Incident;
@@ -51,49 +56,35 @@ const IncidentItem: React.FC<IncidentItemProps> = ({ incident, onIncidentUpdated
 
 const IncidentListUser: React.FC = () => {
     const [incidents, setIncidents] = useState<Incident[]>([]);
-    /*const [isModalOpen, setIsModalOpen] = useState(false);
-    const [newIncidentTitle, setNewIncidentTitle] = useState('');
-    const [newIncidentPath, setNewIncidentPath] = useState('');
-    const [assignedUserEmail, setAssignedUserEmail] = useState('');*/
-    //const [availableUsers, setAvailableUsers] = useState<User[]>([]);
     const [loadingIncidents, setLoadingIncidents] = useState(true);
-    const [loadingUsers, setLoadingUsers] = useState(true);
+    //const [loadingUsers, setLoadingUsers] = useState(true); // Aunque no se usa para usuarios aquí, lo mantengo por si acaso
     const [error, setError] = useState<string | null>(null);
     const [refreshIncidents, setRefreshIncidents] = useState(false);
-    const { user } = useContext(AuthContext);
+
+    // Usa useAppSelector para obtener el usuario y el estado de carga desde Redux
+    const { user, isLoading } = useAppSelector((state) => state.auth);
 
     const [searchTerm, setSearchTerm] = useState('');
-    //const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-    //const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
-
-    /*
-    const openModal = () => {
-        setIsModalOpen(true);
-    };
-
-    
-
-    const openEditModal = (incident: Incident) => {
-        setSelectedIncident(incident);
-        setIsEditModalOpen(true);
-    };*/
-
-
-
-
 
     const handleIncidentUpdated = () => {
         setRefreshIncidents(prev => !prev);
     };
 
-
-
-
     useEffect(() => {
         const fetchIncidents = async () => {
             setLoadingIncidents(true);
             const database = getDatabase(app);
+            // Asegúrate de que user.email no sea null antes de usarlo
+            if (!user || !user.email) {
+                // Si el usuario es null o su email es null, no podemos buscar incidentes
+                setIncidents([]);
+                setLoadingIncidents(false);
+                setError('No user or user email available to fetch incidents.');
+                return;
+            }
+
             const incidentsRef = ref(database, 'incidents');
+            // La consulta usa el email del usuario logueado de Redux
             const incidentsQuery = query(incidentsRef, orderByChild('assignedUser'), equalTo(user.email));
 
             try {
@@ -113,11 +104,11 @@ const IncidentListUser: React.FC = () => {
                     setIncidents(incidentsArray);
                 } else {
                     setIncidents([]);
-                    console.log('No incidents data available');
+                    console.log('No incidents data available for this user.');
                 }
             } catch (error) {
                 console.error('Error fetching incidents:', error);
-                setError('Error al cargar los incidentes.');
+                setError('Error al cargar los incidentes del usuario.');
             } finally {
                 setLoadingIncidents(false);
             }
@@ -141,9 +132,25 @@ const IncidentListUser: React.FC = () => {
             );
         };
 
-        fetchIncidents();
-    }, [refreshIncidents]);
+        // Solo intenta buscar incidentes si el usuario está disponible Y no está cargando
+        // Esto evita que 'user' sea null cuando el componente se renderiza por primera vez
+        // y App.tsx todavía está estableciendo el estado de autenticación.
+        if (user && !isLoading) {
+            fetchIncidents();
+        } else if (!isLoading && !user) {
+            // Si no está cargando y el usuario es null, significa que no hay usuario logueado
+            // (o el usuario fue deslogueado). Podemos limpiar los incidentes y mostrar un mensaje.
+            setIncidents([]);
+            setLoadingIncidents(false);
+            setError('Inicia sesión para ver tus incidentes.');
+        }
 
+    }, [refreshIncidents, user, isLoading]); // ¡Importante añadir user e isLoading a las dependencias!
+
+
+    // El useEffect para fetchNonAdminUsers no usa AuthContext, así que no necesita cambios de Redux.
+    // Lo mantengo comentado si no lo estás usando activamente para este componente
+    /*
     useEffect(() => {
         const fetchNonAdminUsers = async () => {
             setLoadingUsers(true);
@@ -175,14 +182,23 @@ const IncidentListUser: React.FC = () => {
 
         fetchNonAdminUsers();
     }, []);
+    */
 
-    if (loadingIncidents || loadingUsers) {
-        return <div>Cargando...</div>;
+    // Muestra un estado de carga mientras se obtienen los incidentes o el usuario
+    if (isLoading || loadingIncidents) {
+        return <div>Cargando incidentes...</div>;
     }
 
     if (error) {
         return <div>Error: {error}</div>;
     }
+
+    // Si no hay usuario (y ya terminamos de cargar), podrías mostrar un mensaje o redirigir
+    // Aunque ProtectedRoute ya debería encargarse de esto, es un doble chequeo
+    if (!user) {
+        return <div>Por favor, inicia sesión para ver tus incidentes.</div>;
+    }
+
 
     return (
         <div className="incident-list-container">
@@ -223,27 +239,19 @@ const IncidentListUser: React.FC = () => {
             </div>
 
             {incidents
-            .filter(incident =>
+                .filter(incident =>
                     incident.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                     incident.path.toLowerCase().includes(searchTerm.toLowerCase())
                 )
-            .map((incident) => (
-                <IncidentItem
-                    key={incident.id}
-                    incident={incident}
-                    onIncidentUpdated={handleIncidentUpdated}
-                />
-            ))}
+                .map((incident) => (
+                    <IncidentItem
+                        key={incident.id}
+                        incident={incident}
+                        onIncidentUpdated={handleIncidentUpdated}
+                    />
+                ))}
         </div>
     );
 };
 
 export default IncidentListUser;
-
-/*
-{selectedIncident.status && (
-                                    <button className="close-incident-button" onClick={() => { closeEditModal(); handleCloseIncident(); }}>
-                                        Cerrar incidente
-                                    </button>
-                                )} 
-*/

@@ -13,8 +13,8 @@ interface AuthContextProps {
 }
 export const AuthContext =
     createContext<AuthContextProps>({
-        user: null, roles:
-            null
+        user: null,
+        roles: null
     });
 interface AuthProviderProps {
     children: ReactNode;

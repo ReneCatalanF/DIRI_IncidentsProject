@@ -32,9 +32,9 @@ const IncidentItem: React.FC<IncidentItemProps> = ({ incident, onIncidentUpdated
         <>
             <div className="incident-item">
                 {incident.status ? (
-                    <div className="incident-id">INC{incident.id}</div>
+                    <div className="incident-id" onClick={() => onIncidentClick(incident)} style={{ cursor: 'pointer' }}>INC{incident.id}</div>
                 ) : (
-                    <div className="incident-id-close">INC{incident.id}</div>
+                    <div className="incident-id-close" onClick={() => onIncidentClick(incident)} style={{ cursor: 'pointer' }}>INC{incident.id}</div>
                 )}
 
                 <div className="incident-title" onClick={() => onIncidentClick(incident)} style={{ cursor: 'pointer' }}>{incident.title}</div>

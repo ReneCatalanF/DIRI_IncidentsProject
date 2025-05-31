@@ -55,5 +55,7 @@
     "register.placeholder.password": "Contraseña",
     "register.button.register": "Registrarse",
     "register.successMessage": "Registro exitoso. Redirigiendo...",
-    "welcome.message": "Primero debes registrarte O iniciar sesión"
+    "welcome.message": "Primero debes registrarte O iniciar sesión",
+    "incidentItem.deleteButton": "Eliminar incidente"
+    
 }

@@ -1,5 +1,5 @@
 export interface Incident {
-    id: number,
+    id: string,
     fecha: string | undefined,
     assignedUser: string,
     title: string,

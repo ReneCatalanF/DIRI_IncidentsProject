@@ -2,21 +2,22 @@ import React, { useState, useEffect } from 'react';
 import { Incident } from '../../entites/incidentsEntities';
 import './IncidentList.css';
 import { app } from "../../services/FirebaseStorage";
-import { getDatabase, ref, get, update, orderByChild, query, push } from "firebase/database";
+import { getDatabase, ref, get, update, orderByChild, query, push, remove } from "firebase/database";
 import { User } from '../../entites/incidentsEntities';
 
 import logger from "../../services/logging";
-// === IMPORTACIONES PARA INTERNACIONALIZACIÓN ===
-import { FormattedMessage, useIntl } from 'react-intl'; // Asegúrate de importar useIntl
-// ===============================================
+import { FormattedMessage, useIntl } from 'react-intl';
+
+import { FaTrashAlt } from 'react-icons/fa';
 
 interface IncidentItemProps {
     incident: Incident;
     onIncidentUpdated: () => void;
     onIncidentClick: (incident: Incident) => void;
+    onIncidentDeleted: (incidentId: string) => void;
 }
 
-const IncidentItem: React.FC<IncidentItemProps> = ({ incident, onIncidentUpdated, onIncidentClick }) => {
+const IncidentItem: React.FC<IncidentItemProps> = ({ incident, onIncidentUpdated, onIncidentClick, onIncidentDeleted }) => {
     const handleCloseIncident = async () => {
         const database = getDatabase(app);
         const incidentRef = ref(database, `incidents/${incident.id}`);
@@ -27,6 +28,21 @@ const IncidentItem: React.FC<IncidentItemProps> = ({ incident, onIncidentUpdated
             onIncidentUpdated();
         } catch (error) {
             logger.error('Error closing incident:' + error);
+        }
+    };
+
+    const handleDeleteIncident = async () => {
+        if (window.confirm("¿Estás seguro de que quieres eliminar este incidente? Esta acción es irreversible.")) {
+            const database = getDatabase(app);
+            const incidentRef = ref(database, `incidents/${incident.id}`);
+
+            try {
+                await remove(incidentRef); // Elimina el nodo completo del incidente
+                logger.info(`Incident with ID ${incident.id} deleted successfully.`);
+                onIncidentDeleted(incident.id); // Llama a la prop para que el componente padre actualice su estado
+            } catch (error) {
+                logger.error('Error deleting incident:' + error);
+            }
         }
     };
 
@@ -45,9 +61,29 @@ const IncidentItem: React.FC<IncidentItemProps> = ({ incident, onIncidentUpdated
                 <div className="incident-date" onClick={() => onIncidentClick(incident)} style={{ cursor: 'pointer' }}>{incident.fecha}</div>
                 <div className="incident-action">
                     {incident.status ? (
-                        <button className="close-incident-button" onClick={handleCloseIncident}>
-                            <FormattedMessage id="incidentItem.closeButton" />
-                        </button>
+                        <>
+                            <button className="close-incident-button" onClick={handleCloseIncident}>
+                                <FormattedMessage id="incidentItem.closeButton" />
+                            </button>
+                            <button
+                                className="delete-incident-button"
+                                onClick={handleDeleteIncident}
+                                style={{
+                                    marginLeft: '10px',
+                                    backgroundColor: '#dc3545',
+                                    color: 'white',
+                                    border: 'none',
+                                    padding: '8px 12px',
+                                    borderRadius: '4px',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                }}
+                            >
+                                <FaTrashAlt />
+                            </button>
+                        </>
                     ) : (
                         <span className="incident-closed">
                             <FormattedMessage id="incidentItem.closedStatus" />
@@ -130,7 +166,7 @@ const IncidentList: React.FC = () => {
             const incidentsRef = ref(database, 'incidents');
 
             const newIncidentData: Omit<Incident, 'id'> = {
-                fecha: new Date().toLocaleString('es-ES'), // Ojo: Aquí la fecha sigue siendo es-ES. Si quieres que se muestre en el idioma seleccionado, deberías formatearla con intl.formatDate.
+                fecha: new Date().toLocaleString('es-ES'),
                 assignedUser: assignedUserEmail,
                 title: newIncidentTitle,
                 path: newIncidentPath,
@@ -157,6 +193,10 @@ const IncidentList: React.FC = () => {
     const handleIncidentUpdated = () => {
         logger.info('Refresh list');
         setRefreshIncidents(prev => !prev);
+    };
+    const handleIncidentDeleted = (incidentId: string) => {
+        // Actualiza el estado local para eliminar el incidente sin recargar desde Firebase
+        setIncidents(prevIncidents => prevIncidents.filter(incident => incident.id !== incidentId));
     };
 
     const handleUpdateIncident = async () => {
@@ -351,6 +391,7 @@ const IncidentList: React.FC = () => {
                         incident={incident}
                         onIncidentUpdated={handleIncidentUpdated}
                         onIncidentClick={openEditModal}
+                        onIncidentDeleted={handleIncidentDeleted}
                     />
                 ))}
 

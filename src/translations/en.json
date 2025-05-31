@@ -55,5 +55,6 @@
     "register.placeholder.password": "Password",
     "register.button.register": "Register",
     "register.successMessage": "Registration successful. Redirecting...",
-    "welcome.message": "You must first register OR log in"
+    "welcome.message": "You must first register OR log in",
+    "incidentItem.deleteButton": "Delete Incident"
 }
